@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Comprar | Reipps Cosméticos</title><link rel="icon" href="assets/logo.png"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topbar">✨ Página de vendas · escolha todas as variações antes de enviar</div>
+<header class="header"><div class="container nav"><a href="index.html"><img class="logo" src="assets/logo.png" alt="Reipps Cosméticos"></a><nav class="navlinks"><a href="index.html#catalogo">Catálogo</a><a href="index.html#marcas">Marcas</a><a href="index.html#contato">Contato</a></nav><div class="actions"><button class="icon-btn open-cart">🛍️<span class="badge cart-count">0</span></button></div></div></header>
+<section class="page-hero"><div class="container"><span class="eyebrow">Reipps Shopping</span><h1>Monte seu pedido.</h1><p style="max-width:680px;color:#746b61;margin-top:14px">Escolha produtos, cores, tamanhos, curvaturas e modelos. O valor é atualizado automaticamente conforme a variação selecionada.</p></div></section>
+<section class="section catalog-wrap"><div class="container">
+<div class="filters" id="categoryFilters"><button class="filter active" data-cat="todos">Todos</button><button class="filter" data-cat="unhas">💅 Unhas</button><button class="filter" data-cat="sobrancelhas">🤎 Sobrancelhas</button><button class="filter" data-cat="cilios">👁️ Cílios</button><button class="filter" data-cat="equipamentos">⚙️ Equipamentos</button></div>
+<div class="toolbar"><div class="search"><input id="search" placeholder="Procure por produto, marca..."></div><select class="select" id="brandFilter"></select></div>
+<div class="product-grid" id="productGrid"></div>
+</div></section>
+<div class="drawer" id="drawer"><aside class="cart"><div class="cart-head"><h3>Sua sacola</h3><button class="icon-btn close-cart">×</button></div><div class="cart-body" id="cartBody"></div><div class="cart-foot"><div class="total"><span>Total</span><span id="cartTotal">R$ 0,00</span></div><button class="btn btn-gold" style="width:100%" id="checkout">Enviar pedido no WhatsApp 💬</button></div></aside></div>
+<div class="modal" id="productModal"><div class="modal-box"><button class="modal-close" id="closeModal">×</button><div class="modal-grid"><div class="modal-visual" id="modalArt">💅</div><div class="modal-content"><div class="brand" id="modalBrand"></div><h2 id="modalName"></h2><p id="modalDesc" style="color:#746b61"></p><div class="modal-price" id="modalPrice"></div><div id="variationBox"></div><button class="btn btn-primary" style="width:100%" id="addCurrent">Adicionar à sacola</button></div></div></div></div>
+<div class="toast" id="toast"></div><script src="app.js"></script>
+</body></html>
