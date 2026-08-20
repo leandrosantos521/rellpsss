@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0">
+
+<title>Relpps Cosméticos | Unhas, Sobrancelhas & Cílios</title>
+
+<meta
+  name="description"
+  content="Relpps Cosméticos — produtos profissionais para unhas, sobrancelhas, cílios e equipamentos.">
+
+<link
+  rel="icon"
+  href="assets/logo.png.png">
+
+<link
+  rel="stylesheet"
+  href="style.css">
+
+</head>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const splash = document.getElementById("splash");
+
+  if (sessionStorage.getItem("relppsSplash")) {
+    splash.remove();
+    return;
+  }
+
+  sessionStorage.setItem("relppsSplash", "true");
+
+});
+</script>
+
+<body>
+
+ <div id="splash">
+  <img src="assets/logo.png.png" alt="Relpps Cosméticos">
+</div>
+</div>
+
+<!-- =====================================================
+     TOPBAR
+===================================================== -->
+
+<div class="topbar">
+
+  ✨ <b>RELPPS COSMÉTICOS</b>
+  · beleza profissional com acabamento impecável
+  · pedidos pelo WhatsApp
+
+</div>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header class="header">
+
+  <div class="container nav">
+
+    <a href="index.html">
+
+      <img
+        class="logo"
+        src="assets/logo.png.png"
+        alt="Relpps Cosméticos">
+
+    </a>
+
+
+    <nav
+      class="navlinks"
+      id="navlinks">
+
+      <a href="#categorias">
+        Categorias
+      </a>
+
+      <a href="#catalogo">
+        Catálogo
+      </a>
+
+      <a href="#marcas">
+        Marcas
+      </a>
+
+      <a href="vendas.html">
+        Página de Vendas
+      </a>
+
+      <a href="#contato">
+        Contato
+      </a>
+
+    </nav>
+
+
+    <div class="actions">
+
+      <button
+        class="icon-btn open-cart"
+        aria-label="Sacola"
+        type="button">
+
+        🛍️
+
+        <span class="badge cart-count">
+          0
+        </span>
+
+      </button>
+
+
+      <button
+        class="icon-btn menu-btn"
+        id="menuBtn"
+        type="button">
+
+        ☰
+
+      </button>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+
+<!-- =====================================================
+     CONTEÚDO
+===================================================== -->
+
+<main>
+
+
+<!-- =====================================================
+     HERO
+===================================================== -->
+
+<section class="hero">
+
+  <div class="container hero-grid">
+
+
+    <div>
+
+      <span class="eyebrow">
+        Beauty • Professional • Premium
+      </span>
+
+
+      <h1>
+
+        Seu espaço de beleza começa
+
+        <span>aqui.</span>
+
+      </h1>
+
+
+      <p>
+
+        Produtos selecionados para unhas,
+        sobrancelhas, cílios e profissionais
+        que amam entregar um resultado impecável.
+
+      </p>
+
+
+      <div class="cta-row">
+
+        <a
+          class="btn btn-primary"
+          href="#catalogo">
+
+          Ver catálogo ✦
+
+        </a>
+
+
+        <a
+          class="btn btn-light"
+          href="vendas.html">
+
+          Comprar agora
+
+        </a>
+
+      </div>
+
+    </div>
+
+
+    <div class="hero-card">
+
+  <div class="hero-slider">
+
+    <div class="hero-slide active">
+      <img
+        src="assets/nosso site está fora do ar!.png"
+        alt="Relpps Cosméticos">
+    </div>
+
+    <div class="hero-slide">
+      <img
+        src="assets/banner1.jpg.png"
+        alt="Produtos Relpps Cosméticos">
+    </div>
+
+    <div class="hero-slide">
+      <img
+        src="assets/banner2.jpg.png"
+        alt="Produtos para unhas">
+    </div>
+
+    <div class="hero-slide">
+      <img
+        src="assets/logo.png.png"
+        alt="Produtos para cílios e sobrancelhas">
+    </div>
+
+  </div>
+
+
+  <button
+    class="slider-btn slider-prev"
+    type="button"
+    onclick="changeHeroSlide(-1)">
+
+    ‹
+
+  </button>
+
+
+  <button
+    class="slider-btn slider-next"
+    type="button"
+    onclick="changeHeroSlide(1)">
+
+    ›
+
+  </button>
+
+
+  <div class="slider-dots">
+
+    <span
+      class="slider-dot active"
+      onclick="goHeroSlide(0)">
+    </span>
+
+    <span
+      class="slider-dot"
+      onclick="goHeroSlide(1)">
+    </span>
+
+    <span
+      class="slider-dot"
+      onclick="goHeroSlide(2)">
+    </span>
+
+    <span
+      class="slider-dot"
+      onclick="goHeroSlide(3)">
+    </span>
+
+  </div>
+
+
+  <div class="hero-tag">
+
+    Unhas · Sombrancelhas · Cílios · Equipamentos
+
+  </div>
+
+</div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     MARQUEE
+===================================================== -->
+
+<div class="marquee">
+
+  <div class="marquee-track">
+
+    <span>BAD PINK</span>
+    <span>FADVAN</span>
+    <span>BLUVE</span>
+    <span>CUCCIO</span>
+    <span>UZE NAILS</span>
+    <span>REPOS</span>
+    <span>CHERRY</span>
+    <span>BEAUTIFY</span>
+    <span>ELITE PREMIUM</span>
+    <span>SKY ROSE</span>
+    <span>CLIONE</span>
+    <span>MASTER</span>
+
+    <span>BAD PINK</span>
+    <span>FADVAN</span>
+    <span>BLUVE</span>
+    <span>CUCCIO</span>
+    <span>UZE NAILS</span>
+    <span>REPOS</span>
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     CATEGORIAS
+===================================================== -->
+
+<section
+  class="section"
+  id="categorias">
+
+  <div class="container">
+
+
+    <div class="section-head">
+
+      <div>
+
+        <span class="eyebrow">
+          Explore
+        </span>
+
+        <h2 class="section-title">
+          Escolha sua categoria
+        </h2>
+
+      </div>
+
+
+      <p class="section-sub">
+
+        Tudo organizado para você encontrar
+        rápido o que precisa para o seu atendimento.
+
+      </p>
+
+    </div>
+
+
+
+    <div class="category-grid">
+
+
+      <a
+        class="category-card"
+        href="#catalogo"
+        onclick="currentCategory='unhas';setTimeout(renderProducts,0)">
+
+        <div class="symbol">
+          💅
+        </div>
+
+        <h3>
+          Unhas
+        </h3>
+
+        <p>
+          Géis, esmaltes, bases, glitters e nail art.
+        </p>
+
+      </a>
+
+
+
+      <a
+        class="category-card"
+        href="#catalogo"
+        onclick="currentCategory='sobrancelhas';setTimeout(renderProducts,0)">
+
+        <div class="symbol">
+          🤎
+        </div>
+
+        <h3>
+          Sobrancelhas
+        </h3>
+
+        <p>
+          Henna, pinças, marcação e brow styling.
+        </p>
+
+      </a>
+
+
+
+      <a
+        class="category-card"
+        href="#catalogo"
+        onclick="currentCategory='cilios';setTimeout(renderProducts,0)">
+
+        <div class="symbol">
+          👁️
+        </div>
+
+        <h3>
+          Cílios
+        </h3>
+
+        <p>
+          Fio a fio, volume, colas e removedores.
+        </p>
+
+      </a>
+
+
+
+      <a
+        class="category-card"
+        href="#catalogo"
+        onclick="currentCategory='equipamentos';setTimeout(renderProducts,0)">
+
+        <div class="symbol">
+          ⚙️
+        </div>
+
+        <h3>
+          Equipamentos
+        </h3>
+
+        <p>
+          Cabines, luminárias, pinças e acessórios.
+        </p>
+
+      </a>
+
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CATALOGO
+===================================================== -->
+
+<section
+  class="section catalog-wrap"
+  id="catalogo">
+
+  <div class="container">
+
+
+    <div class="section-head">
+
+      <div>
+
+        <span class="eyebrow">
+          Catálogo Relpps
+        </span>
+
+        <h2 class="section-title">
+          Produtos em destaque
+        </h2>
+
+      </div>
+
+
+      <p class="section-sub">
+
+        Clique no produto para escolher cor,
+        tamanho, curvatura ou outras variações.
+        Os preços podem mudar conforme a opção.
+
+      </p>
+
+    </div>
+
+
+
+    <div
+      class="filters"
+      id="categoryFilters">
+
+      <button
+        class="filter active"
+        data-cat="todos">
+
+        Todos
+
+      </button>
+
+
+      <button
+        class="filter"
+        data-cat="unhas">
+
+        💅 Unhas
+
+      </button>
+
+
+      <button
+        class="filter"
+        data-cat="sobrancelhas">
+
+        🤎 Sobrancelhas
+
+      </button>
+
+
+      <button
+        class="filter"
+        data-cat="cilios">
+
+        👁️ Cílios
+
+      </button>
+
+
+      <button
+        class="filter"
+        data-cat="equipamentos">
+
+        ⚙️ Equipamentos
+
+      </button>
+
+    </div>
+
+
+
+    <div class="toolbar">
+
+
+      <div class="search">
+
+        <input
+          id="search"
+          placeholder="Buscar produto ou marca...">
+
+      </div>
+
+
+      <select
+        class="select"
+        id="brandFilter">
+
+      </select>
+
+
+    </div>
+
+
+
+    <div
+      class="product-grid"
+      id="productGrid">
+
+    </div>
+
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     DESTAQUES
+===================================================== -->
+
+<section class="section">
+
+  <div class="container">
+
+
+    <div class="feature">
+
+
+      <div class="feature-card">
+
+        <h3>
+          Monte seu pedido do seu jeito.
+        </h3>
+
+
+        <p>
+
+          Escolha as variações,
+          coloque tudo na sacola e envie
+          seu pedido direto para o WhatsApp
+          da Relpps.
+
+        </p>
+
+
+        <a
+          class="btn btn-gold"
+          href="vendas.html">
+
+          Ir para a página de vendas
+
+        </a>
+
+
+        <div class="big">
+          💅
+        </div>
+
+      </div>
+
+
+
+      <div class="feature-card light">
+
+        <h3>
+          Seu próximo atendimento começa
+          com bons produtos.
+        </h3>
+
+
+        <p>
+
+          Marcas e itens pensados para
+          profissionais de unhas, brows e lashes.
+
+        </p>
+
+
+        <a
+          class="btn btn-primary"
+          href="#marcas">
+
+          Ver marcas
+
+        </a>
+
+
+        <div class="big">
+          ✨
+        </div>
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     MARCAS
+===================================================== -->
+
+<section
+  class="section"
+  id="marcas">
+
+  <div class="container">
+
+
+    <div class="section-head">
+
+      <div>
+
+        <span class="eyebrow">
+          Marcas
+        </span>
+
+        <h2 class="section-title">
+          As favoritas das profissionais
+        </h2>
+
+      </div>
+
+    </div>
+
+
+    <div
+      class="brands"
+      id="brandPills">
+
+    </div>
+
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CONTATO
+===================================================== -->
+
+<section
+  class="section"
+  id="contato">
+
+  <div class="container">
+
+
+    <div class="section-head">
+
+      <div>
+
+        <span class="eyebrow">
+          Atendimento
+        </span>
+
+        <h2 class="section-title">
+          Fale com a Relpps
+        </h2>
+
+      </div>
+
+
+      <p class="section-sub">
+
+        Tire dúvidas, consulte disponibilidade
+        e finalize seu pedido pelo WhatsApp.
+
+      </p>
+
+    </div>
+
+
+
+    <div class="info-grid">
+
+
+      <div class="info">
+
+        <b>
+          💬 WhatsApp
+        </b>
+
+        <p>
+
+          Use o botão de finalizar pedido
+          para enviar sua sacola diretamente
+          para a loja.
+
+        </p>
+
+      </div>
+
+
+
+      <div class="info">
+
+        <b>
+          📦 Pedidos
+        </b>
+
+        <p>
+
+          Escolha cor, tamanho e demais
+          variações antes de enviar.
+
+        </p>
+
+      </div>
+
+
+
+      <div class="info">
+
+        <b>
+          ✨ Atendimento
+        </b>
+
+        <p>
+
+          Produtos para profissionais
+          e apaixonadas por beleza.
+
+        </p>
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+</section>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer class="footer">
+
+  <div class="container">
+
+
+    <div class="footer-grid">
+
+
+      <div>
+
+        <img
+          src="assets/logo.png.png"
+          alt="Relpps Cosméticos">
+
+
+        <p>
+
+          Beleza profissional com estilo,
+          qualidade e aquele toque dourado
+          da Relpps.
+
+        </p>
+
+      </div>
+
+
+
+      <div>
+
+        <h4>
+          Comprar
+        </h4>
+
+        <p>
+          <a href="#catalogo">
+            Catálogo
+          </a>
+        </p>
+
+        <p>
+          <a href="vendas.html">
+            Página de vendas
+          </a>
+        </p>
+
+        <p>
+          <a href="#marcas">
+            Marcas
+          </a>
+        </p>
+
+      </div>
+
+
+
+      <div>
+
+        <h4>
+          Atendimento
+        </h4>
+
+        <p>
+          <a href="#contato">
+            WhatsApp
+          </a>
+        </p>
+
+        <p>
+          Unhas · Sobrancelhas · Cílios
+        </p>
+
+        <p>
+          Equipamentos profissionais
+        </p>
+
+      </div>
+
+
+    </div>
+
+
+
+    <div class="copyright">
+
+      © 2026 Relpps Cosméticos
+      · Todos os direitos reservados.
+
+    </div>
+
+
+  </div>
+
+</footer>
+
+
+
+<!-- =====================================================
+     SACOLA / CHECKOUT
+===================================================== -->
+
+<div
+  class="drawer"
+  id="drawer">
+
+
+  <aside class="cart">
+
+
+    <!-- CABEÇALHO DA SACOLA -->
+
+    <div class="cart-head">
+
+      <h3>
+        Sua sacola
+      </h3>
+
+
+      <button
+        class="icon-btn close-cart"
+        type="button"
+        aria-label="Fechar sacola">
+
+        ×
+
+      </button>
+
+    </div>
+
+
+
+    <!-- PRODUTOS -->
+
+    <div
+      class="cart-body"
+      id="cartBody">
+
+    </div>
+
+
+
+    <!-- RODAPÉ / CHECKOUT -->
+
+    <div class="cart-foot">
+
+
+      <!-- AVISO -->
+
+      <div class="checkout-info">
+
+
+        <div class="checkout-title">
+
+          💳 Finalize seu pedido
+
+        </div>
+
+
+        <p>
+
+          Confira seus produtos e escolha
+          como deseja receber.
+
+        </p>
+
+
+        <div class="delivery-message">
+
+
+          🚚 <strong>Entrega:</strong>
+
+          disponível para compras a partir de
+
+          <strong>R$ 50,00</strong>,
+
+          com a taxa de entrega combinada
+          diretamente com a loja.
+
+
+          <br><br>
+
+
+          🛍️ <strong>Retirada:</strong>
+
+          também disponível,
+          conforme combinado com a loja.
+
+
+        </div>
+
+
+      </div>
+
+
+
+      <!-- TOTAL -->
+
+      <div class="total">
+
+        <span>
+          Total
+        </span>
+
+
+        <span id="cartTotal">
+
+          R$ 0,00
+
+        </span>
+
+      </div>
+
+
+
+      <!-- BOTÃO -->
+
+      <button
+        class="btn btn-gold"
+        style="width:100%"
+        id="checkout"
+        type="button">
+
+        Continuar para pagamento 💳
+
+      </button>
+
+
+    </div>
+
+
+  </aside>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     MODAL DO PRODUTO
+===================================================== -->
+
+<div
+  class="modal"
+  id="productModal">
+
+
+  <div class="modal-box">
+
+
+    <button
+      class="modal-close"
+      id="closeModal"
+      type="button">
+
+      ×
+
+    </button>
+
+
+
+    <div class="modal-grid">
+
+
+      <div
+        class="modal-visual"
+        id="modalArt">
+
+        💅
+
+      </div>
+
+
+
+      <div class="modal-content">
+
+
+        <div
+          class="brand"
+          id="modalBrand">
+
+        </div>
+
+
+        <h2 id="modalName">
+
+        </h2>
+
+
+        <p
+          id="modalDesc"
+          style="color:#746b61">
+
+        </p>
+
+
+        <div
+          class="modal-price"
+          id="modalPrice">
+
+        </div>
+
+
+        <div
+          id="variationBox">
+
+        </div>
+
+
+        <button
+          class="btn btn-primary"
+          style="width:100%"
+          id="addCurrent"
+          type="button">
+
+          Adicionar à sacola
+
+        </button>
+
+
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     TOAST
+===================================================== -->
+
+<div
+  class="toast"
+  id="toast">
+
+</div>
+
+
+
+<!-- =====================================================
+     ESTILO DO CHECKOUT
+===================================================== -->
+
+<style>
+
+.checkout-info{
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf3,
+      #f7eee1
+    );
+
+  border:
+    1px solid
+    rgba(184,138,59,.22);
+
+  border-radius:16px;
+
+  padding:15px;
+
+  margin-bottom:15px;
+
+  box-shadow:
+    0 6px 18px
+    rgba(45,31,12,.05);
+
+}
+
+
+.checkout-title{
+
+  font-size:.94rem;
+
+  font-weight:900;
+
+  color:#24150f;
+
+  margin-bottom:5px;
+
+}
+
+
+.checkout-info p{
+
+  color:#746b61;
+
+  font-size:.73rem;
+
+  line-height:1.45;
+
+  margin-bottom:11px;
+
+}
+
+
+.delivery-message{
+
+  background:#fff;
+
+  border:
+    1px solid
+    rgba(184,138,59,.16);
+
+  border-radius:12px;
+
+  padding:12px;
+
+  color:#66584d;
+
+  font-size:.72rem;
+
+  line-height:1.55;
+
+}
+
+
+.delivery-message strong{
+
+  color:#24150f;
+
+}
+
+
+#checkout{
+
+  margin-top:2px;
+
+  min-height:48px;
+
+  font-size:.84rem;
+
+  box-shadow:
+    0 8px 18px
+    rgba(184,138,59,.18);
+
+}
+
+
+#checkout:hover{
+
+  transform:translateY(-2px);
+
+  box-shadow:
+    0 10px 24px
+    rgba(184,138,59,.25);
+
+}
+
+
+</style>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script src="app.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const intro = document.getElementById("introScreen");
+
+  if(!intro) return;
+
+  setTimeout(() => {
+
+    intro.classList.add("hide");
+
+  }, 2200);
+
+});
+
+</script>
+
+
+<script>
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    const brandContainer =
+      document.querySelector("#brandPills");
+
+
+    if(
+      brandContainer &&
+      typeof brands === "function"
+    ){
+
+      brandContainer.innerHTML =
+        brands()
+          .map(
+            b =>
+              `<span class="brand-pill">${b}</span>`
+          )
+          .join("");
+
+    }
+
+  }
+);
+
+</script>
+
+
+</body>
+
+</html>
