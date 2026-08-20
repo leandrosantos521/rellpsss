@@ -25,9 +25,27 @@
 
 </head>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const splash = document.getElementById("splash");
+
+  if (sessionStorage.getItem("relppsSplash")) {
+    splash.remove();
+    return;
+  }
+
+  sessionStorage.setItem("relppsSplash", "true");
+
+});
+</script>
 
 <body>
 
+ <div id="splash">
+  <img src="assets/logo.png.png" alt="Relpps Cosméticos">
+</div>
+</div>
 
 <!-- =====================================================
      TOPBAR
@@ -263,7 +281,7 @@
 
   <div class="hero-tag">
 
-    Unhas · Brows · Lashes · Equipamentos
+    Unhas · Sombrancelhas · Cílios · Equipamentos
 
   </div>
 
@@ -1264,6 +1282,24 @@
 ===================================================== -->
 
 <script src="app.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const intro = document.getElementById("introScreen");
+
+  if(!intro) return;
+
+  setTimeout(() => {
+
+    intro.classList.add("hide");
+
+  }, 2200);
+
+});
+
+</script>
 
 
 <script>

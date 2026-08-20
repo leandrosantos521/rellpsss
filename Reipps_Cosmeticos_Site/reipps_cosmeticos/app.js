@@ -1,11 +1,6 @@
 const STORE = {
   name: "Relpps Cosméticos",
-
-  // =========================================================
-  // WHATSAPP DA LOJA
-  // =========================================================
-  whatsapp: "556199649-8557",
-
+  whatsapp: "5561996498557",
   currency: "BRL"
 };
 
@@ -15,16 +10,9 @@ const STORE = {
    ========================================================= */
 
 const DELIVERY = {
-
-  // PEDIDO MÍNIMO PARA ENTREGA
   minimumOrder: 50.00,
-
-  // TAXA DE ENTREGA
   fee: 0,
-
-  // A TAXA SERÁ COMBINADA COM A LOJA
   feeText: "Taxa de entrega a combinar com a loja"
-
 };
 
 
@@ -34,9 +22,9 @@ const DELIVERY = {
 
 const products = [
 
-  // =========================================================
-  // UNHAS
-  // =========================================================
+  /* =======================================================
+     UNHAS
+  ======================================================= */
 
   {
     id:1,
@@ -251,9 +239,9 @@ const products = [
   },
 
 
-  // =========================================================
-  // SOBRANCELHAS
-  // =========================================================
+  /* =======================================================
+     SOBRANCELHAS
+  ======================================================= */
 
   {
     id:13,
@@ -361,9 +349,9 @@ const products = [
   },
 
 
-  // =========================================================
-  // CÍLIOS
-  // =========================================================
+  /* =======================================================
+     CÍLIOS
+  ======================================================= */
 
   {
     id:19,
@@ -497,9 +485,9 @@ const products = [
   },
 
 
-  // =========================================================
-  // EQUIPAMENTOS
-  // =========================================================
+  /* =======================================================
+     EQUIPAMENTOS
+  ======================================================= */
 
   {
     id:25,
@@ -644,45 +632,163 @@ const products = [
 
 
 /* =========================================================
-   SISTEMA
-   ========================================================= */
-
-let cart =
-  JSON.parse(
-    localStorage.getItem("relpps_cart") || "[]"
-  );
-
-let currentProduct = null;
-let currentCategory = "todos";
-
-
-/* =========================================================
-   CONFIGURAÇÃO DOS DESCONTOS
+   CONFIGURAÇÃO
    ========================================================= */
 
 const DISCOUNT = {
-
-  // DESCONTO A PARTIR DE R$ 100
   minimum: 100.00,
-
-  // PRODUTOS NORMAIS
   normalPercent: 5,
-
-  // COLAS
   colaPercent: 3
-
 };
 
 
 /* =========================================================
-   FORMATAÇÃO
+   ESTADO
    ========================================================= */
 
-const money = v =>
-  Number(v).toLocaleString("pt-BR", {
+let cart = [];
+let currentProduct = null;
+let currentCategory = "todos";
+
+const CART_STORAGE_KEY = "relpps_cart_v2";
+
+
+/* =========================================================
+   MOEDA
+   ========================================================= */
+
+function money(value){
+
+  const number = Number(value);
+
+  if(!Number.isFinite(number)){
+    return "R$ 0,00";
+  }
+
+  return number.toLocaleString("pt-BR", {
     style:"currency",
     currency:"BRL"
   });
+
+}
+
+
+/* =========================================================
+   NÚMERO SEGURO
+   ========================================================= */
+
+function safeNumber(value){
+
+  const number = Number(value);
+
+  return Number.isFinite(number)
+    ? number
+    : 0;
+
+}
+
+
+/* =========================================================
+   ARREDONDAMENTO
+   ========================================================= */
+
+function roundMoney(value){
+
+  return Math.round(
+    (safeNumber(value) + Number.EPSILON) * 100
+  ) / 100;
+
+}
+
+
+/* =========================================================
+   CARREGAR CARRINHO
+   ========================================================= */
+
+function loadCart(){
+
+  try{
+
+    const saved =
+      localStorage.getItem(
+        CART_STORAGE_KEY
+      );
+
+    if(!saved){
+
+      cart = [];
+
+      return;
+
+    }
+
+    const parsed =
+      JSON.parse(saved);
+
+    if(!Array.isArray(parsed)){
+
+      cart = [];
+
+      return;
+
+    }
+
+    cart =
+      parsed
+        .filter(item =>
+          item &&
+          item.id != null &&
+          safeNumber(item.qty) > 0 &&
+          safeNumber(item.price) >= 0
+        )
+        .map(item => ({
+
+          key:
+            String(
+              item.key ||
+              `${item.id}-${item.variation || ""}`
+            ),
+
+          id:
+            Number(item.id),
+
+          name:
+            String(item.name || ""),
+
+          brand:
+            String(item.brand || ""),
+
+          art:
+            String(item.art || "🛍️"),
+
+          price:
+            roundMoney(item.price),
+
+          variation:
+            String(item.variation || ""),
+
+          qty:
+            Math.max(
+              1,
+              Math.floor(
+                safeNumber(item.qty)
+              )
+            )
+
+        }));
+
+  }catch(error){
+
+    console.error(
+      "Erro ao carregar carrinho:",
+      error
+    );
+
+    cart = [];
+
+  }
+
+}
 
 
 /* =========================================================
@@ -691,10 +797,21 @@ const money = v =>
 
 function saveCart(){
 
-  localStorage.setItem(
-    "repps_cart",
-    JSON.stringify(cart)
-  );
+  try{
+
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify(cart)
+    );
+
+  }catch(error){
+
+    console.error(
+      "Erro ao salvar carrinho:",
+      error
+    );
+
+  }
 
   updateCartUI();
 
@@ -702,90 +819,195 @@ function saveCart(){
 
 
 /* =========================================================
-   TOTAL DOS PRODUTOS
+   TOTAL BRUTO
    ========================================================= */
 
 function totalCart(){
 
-  return cart.reduce(
-    (s,i) =>
-      s + (Number(i.price) * Number(i.qty)),
-    0
+  return roundMoney(
+    cart.reduce(
+      (total,item) => {
+
+        const price =
+          safeNumber(item.price);
+
+        const qty =
+          Math.max(
+            0,
+            safeNumber(item.qty)
+          );
+
+        return total +
+          (price * qty);
+
+      },
+      0
+    )
   );
 
 }
 
 
 /* =========================================================
-   VERIFICA SE É COLA
+   VERIFICAR COLA
    ========================================================= */
 
 function isCola(item){
 
+  if(!item) return false;
+
+  const name =
+    String(item.name || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .toLowerCase();
+
+  return name.includes("cola");
+
+}
+
+
+/* =========================================================
+   PERCENTUAL DO PRODUTO
+   ========================================================= */
+
+function getProductDiscountPercent(item){
+
+  return isCola(item)
+    ? DISCOUNT.colaPercent
+    : DISCOUNT.normalPercent;
+
+}
+
+
+/* =========================================================
+   VERIFICAR SE PAGAMENTO POSSUI DESCONTO
+   ========================================================= */
+
+function paymentHasDiscount(payment){
+
   return (
-    item &&
-    item.name &&
-    item.name
-      .toLowerCase()
-      .includes("cola")
+    payment === "pix" ||
+    payment === "dinheiro"
   );
 
 }
 
 
 /* =========================================================
-   CALCULAR DESCONTO
+   DESCONTO INDIVIDUAL DE UM ITEM
    ========================================================= */
 
-function paymentDiscount(payment){
+function getItemDiscount(item, payment){
 
-  const subtotal = totalCart();
-
-  if(subtotal <= DISCOUNT.minimum){
+  if(!item){
     return 0;
   }
 
-  if(payment === "cartao"){
-    return 0;
-  }
+  const subtotal =
+    totalCart();
+
+  /*
+   * O desconto só é liberado a partir de R$ 100.
+   */
 
   if(
-    payment !== "pix" &&
-    payment !== "dinheiro"
+    subtotal < DISCOUNT.minimum
   ){
+
     return 0;
+
   }
 
-  let discount = 0;
+  /*
+   * Cartão não recebe desconto.
+   */
 
-  cart.forEach(item => {
+  if(
+    !paymentHasDiscount(payment)
+  ){
 
-    const itemTotal =
-      Number(item.price) * Number(item.qty);
+    return 0;
 
-    if(isCola(item)){
+  }
 
-      discount +=
-        itemTotal *
-        (DISCOUNT.colaPercent / 100);
+  const itemTotal =
+    safeNumber(item.price) *
+    safeNumber(item.qty);
 
-    }else{
+  const percent =
+    getProductDiscountPercent(item);
 
-      discount +=
-        itemTotal *
-        (DISCOUNT.normalPercent / 100);
-
-    }
-
-  });
-
-  return discount;
+  return roundMoney(
+    itemTotal *
+    (percent / 100)
+  );
 
 }
 
 
 /* =========================================================
-   TOTAL COM PAGAMENTO
+   DESCONTO TOTAL
+   ========================================================= */
+
+function paymentDiscount(payment){
+
+  if(
+    !paymentHasDiscount(payment)
+  ){
+
+    return 0;
+
+  }
+
+  const subtotal =
+    totalCart();
+
+  if(
+    subtotal < DISCOUNT.minimum
+  ){
+
+    return 0;
+
+  }
+
+  const discount =
+    cart.reduce(
+      (total,item) => {
+
+        return total +
+          getItemDiscount(
+            item,
+            payment
+          );
+
+      },
+      0
+    );
+
+  return roundMoney(discount);
+
+}
+
+
+/* =========================================================
+   COMPATIBILIDADE
+   ========================================================= */
+
+function cartDiscount(){
+
+  /*
+   * Mantido para não quebrar nenhuma parte
+   * antiga do HTML/CSS caso ainda use essa função.
+   */
+
+  return paymentDiscount("pix");
+
+}
+
+
+/* =========================================================
+   TOTAL FINAL
    ========================================================= */
 
 function totalWithPayment(payment){
@@ -796,7 +1018,12 @@ function totalWithPayment(payment){
   const discount =
     paymentDiscount(payment);
 
-  return subtotal - discount;
+  return Math.max(
+    0,
+    roundMoney(
+      subtotal - discount
+    )
+  );
 
 }
 
@@ -808,36 +1035,45 @@ function totalWithPayment(payment){
 function renderProducts(){
 
   const grid =
-    document.querySelector("#productGrid");
+    document.querySelector(
+      "#productGrid"
+    );
 
   if(!grid) return;
 
   const search =
     (
-      document.querySelector("#search")
-        ?.value || ""
-    ).toLowerCase();
+      document.querySelector(
+        "#search"
+      )?.value || ""
+    )
+      .toLowerCase()
+      .trim();
 
   const brand =
-    document.querySelector("#brandFilter")
-      ?.value || "todas";
+    document.querySelector(
+      "#brandFilter"
+    )?.value || "todas";
 
   let list =
     products.filter(
-      p =>
+      product =>
         currentCategory === "todos" ||
-        p.cat === currentCategory
+        product.cat === currentCategory
     );
 
   if(search){
 
     list =
-      list.filter(
-        p =>
-          `${p.brand} ${p.name} ${p.desc}`
-            .toLowerCase()
-            .includes(search)
-      );
+      list.filter(product => {
+
+        const text =
+          `${product.brand} ${product.name} ${product.desc}`
+            .toLowerCase();
+
+        return text.includes(search);
+
+      });
 
   }
 
@@ -845,7 +1081,8 @@ function renderProducts(){
 
     list =
       list.filter(
-        p => p.brand === brand
+        product =>
+          product.brand === brand
       );
 
   }
@@ -864,7 +1101,7 @@ function renderProducts(){
 
 
 /* =========================================================
-   CARD DO PRODUTO
+   CARD
    ========================================================= */
 
 function productCard(p){
@@ -920,9 +1157,11 @@ function productCard(p){
             class="add"
             onclick="
               event.stopPropagation();
-              openProduct(${p.id})
+              openProduct(${p.id});
             ">
+
             +
+
           </button>
 
         </div>
@@ -944,7 +1183,9 @@ function brands(){
 
   return [
     ...new Set(
-      products.map(p => p.brand)
+      products.map(
+        product => product.brand
+      )
     )
   ].sort();
 
@@ -958,13 +1199,17 @@ function brands(){
 function setupFilters(){
 
   document
-    .querySelector("#categoryFilters")
+    .querySelector(
+      "#categoryFilters"
+    )
     ?.addEventListener(
       "click",
-      e => {
+      event => {
 
         const btn =
-          e.target.closest("[data-cat]");
+          event.target.closest(
+            "[data-cat]"
+          );
 
         if(!btn) return;
 
@@ -972,51 +1217,64 @@ function setupFilters(){
           btn.dataset.cat;
 
         document
-          .querySelectorAll("[data-cat]")
-          .forEach(
-            b => b.classList.remove("active")
+          .querySelectorAll(
+            "[data-cat]"
+          )
+          .forEach(button =>
+            button.classList.remove(
+              "active"
+            )
           );
 
-        btn.classList.add("active");
+        btn.classList.add(
+          "active"
+        );
 
         renderProducts();
 
       }
     );
 
+
   document
-    .querySelector("#search")
+    .querySelector(
+      "#search"
+    )
     ?.addEventListener(
       "input",
       renderProducts
     );
 
-  document
-    .querySelector("#brandFilter")
-    ?.addEventListener(
-      "change",
-      renderProducts
+
+  const brandFilter =
+    document.querySelector(
+      "#brandFilter"
     );
 
-  const bf =
-    document.querySelector("#brandFilter");
+  if(brandFilter){
 
-  if(bf){
-
-    bf.innerHTML =
-      `<option value="todas">
-        Todas as marcas
-      </option>` +
+    brandFilter.innerHTML =
+      `
+        <option value="todas">
+          Todas as marcas
+        </option>
+      ` +
 
       brands()
         .map(
-          b => `
-            <option value="${b}">
-              ${b}
-            </option>
-          `
+          brand =>
+            `
+              <option value="${brand}">
+                ${brand}
+              </option>
+            `
         )
         .join("");
+
+    brandFilter.addEventListener(
+      "change",
+      renderProducts
+    );
 
   }
 
@@ -1029,72 +1287,108 @@ function setupFilters(){
 
 function openProduct(id){
 
-  const p =
+  const product =
     products.find(
-      x => x.id === id
+      item => item.id === id
     );
 
-  if(!p) return;
+  if(!product) return;
 
-  currentProduct = p;
+  currentProduct =
+    product;
 
   const modal =
-    document.querySelector("#productModal");
+    document.querySelector(
+      "#productModal"
+    );
 
   if(!modal) return;
 
   document
-    .querySelector("#modalArt")
-    .textContent = p.art;
+    .querySelector(
+      "#modalArt"
+    )
+    ?.replaceChildren(
+      document.createTextNode(
+        product.art
+      )
+    );
 
-  document
-    .querySelector("#modalBrand")
-    .textContent = p.brand;
+  const brand =
+    document.querySelector(
+      "#modalBrand"
+    );
 
-  document
-    .querySelector("#modalName")
-    .textContent = p.name;
+  if(brand)
+    brand.textContent =
+      product.brand;
 
-  document
-    .querySelector("#modalDesc")
-    .textContent = p.desc;
+  const name =
+    document.querySelector(
+      "#modalName"
+    );
 
-  const opts =
-    p.variations?.options || [];
+  if(name)
+    name.textContent =
+      product.name;
 
-  document
-    .querySelector("#variationBox")
-    .innerHTML =
-      opts.length
+  const desc =
+    document.querySelector(
+      "#modalDesc"
+    );
+
+  if(desc)
+    desc.textContent =
+      product.desc;
+
+
+  const variationBox =
+    document.querySelector(
+      "#variationBox"
+    );
+
+  if(variationBox){
+
+    const options =
+      product.variations?.options ||
+      [];
+
+    variationBox.innerHTML =
+      options.length
         ? `
 
           <div class="option">
 
             <label>
-              ${p.variations.label}
+              ${product.variations.label}
             </label>
 
             <div class="option-row">
 
-              ${opts.map(
-                (o, i) => `
+              ${
+                options
+                  .map(
+                    (option,index) => `
 
-                  <button
-                    class="option-btn ${
-                      i === 0
-                        ? "active"
-                        : ""
-                    }"
-                    data-price="${o[1]}"
-                    data-value="${o[0]}"
-                    onclick="chooseOption(this)">
+                      <button
+                        type="button"
+                        class="option-btn ${
+                          index === 0
+                            ? "active"
+                            : ""
+                        }"
+                        data-price="${safeNumber(option[1])}"
+                        data-value="${option[0]}"
+                        onclick="chooseOption(this)">
 
-                    ${o[0]}
+                        ${option[0]}
 
-                  </button>
+                      </button>
 
-                `
-              ).join("")}
+                    `
+                  )
+                  .join("")
+              }
 
             </div>
 
@@ -1103,36 +1397,36 @@ function openProduct(id){
         `
         : "";
 
-  if(p.variations?.sizeOptions){
 
-    document
-      .querySelector("#variationBox")
-      .innerHTML += `
+    if(product.variations?.sizeOptions){
+
+      variationBox.innerHTML += `
 
         <div class="option">
 
           <label>
-            ${p.variations.sizeLabel}
+            ${product.variations.sizeLabel}
           </label>
 
           <div class="option-row">
 
             ${
-              p.variations.sizeOptions
+              product.variations.sizeOptions
                 .map(
-                  (o, i) => `
+                  (option,index) => `
 
                     <button
+                      type="button"
                       class="option-btn size-btn ${
-                        i === 0
+                        index === 0
                           ? "active"
                           : ""
                       }"
-                      data-extra="${o[1]}"
-                      data-value="${o[0]}"
+                      data-extra="${safeNumber(option[1])}"
+                      data-value="${option[0]}"
                       onclick="chooseSize(this)">
 
-                      ${o[0]}
+                      ${option[0]}
 
                     </button>
 
@@ -1147,17 +1441,24 @@ function openProduct(id){
 
       `;
 
+    }
+
   }
 
+
   modal.dataset.base =
-    p.price;
+    safeNumber(
+      product.price
+    );
 
   modal.dataset.extra =
     0;
 
   updateModalPrice();
 
-  modal.classList.add("open");
+  modal.classList.add(
+    "open"
+  );
 
   document.body.style.overflow =
     "hidden";
@@ -1166,23 +1467,39 @@ function openProduct(id){
 
 
 /* =========================================================
-   ESCOLHER VARIAÇÃO
+   ESCOLHER OPÇÃO
    ========================================================= */
 
 function chooseOption(btn){
 
+  if(!btn) return;
+
   btn.parentElement
-    .querySelectorAll(".option-btn")
+    ?.querySelectorAll(
+      ".option-btn"
+    )
     .forEach(
-      x => x.classList.remove("active")
+      button =>
+        button.classList.remove(
+          "active"
+        )
     );
 
-  btn.classList.add("active");
+  btn.classList.add(
+    "active"
+  );
 
-  document
-    .querySelector("#productModal")
-    .dataset.base =
-      btn.dataset.price;
+  const modal =
+    document.querySelector(
+      "#productModal"
+    );
+
+  if(!modal) return;
+
+  modal.dataset.base =
+    safeNumber(
+      btn.dataset.price
+    );
 
   updateModalPrice();
 
@@ -1195,18 +1512,34 @@ function chooseOption(btn){
 
 function chooseSize(btn){
 
+  if(!btn) return;
+
   btn.parentElement
-    .querySelectorAll(".option-btn")
+    ?.querySelectorAll(
+      ".size-btn"
+    )
     .forEach(
-      x => x.classList.remove("active")
+      button =>
+        button.classList.remove(
+          "active"
+        )
     );
 
-  btn.classList.add("active");
+  btn.classList.add(
+    "active"
+  );
 
-  document
-    .querySelector("#productModal")
-    .dataset.extra =
-      btn.dataset.extra;
+  const modal =
+    document.querySelector(
+      "#productModal"
+    );
+
+  if(!modal) return;
+
+  modal.dataset.extra =
+    safeNumber(
+      btn.dataset.extra
+    );
 
   updateModalPrice();
 
@@ -1214,31 +1547,48 @@ function chooseSize(btn){
 
 
 /* =========================================================
-   ATUALIZAR PREÇO
+   PREÇO DO MODAL
    ========================================================= */
 
 function updateModalPrice(){
 
-  const m =
-    document.querySelector("#productModal");
-
-  if(!m || !currentProduct) return;
-
-  const price =
-    Number(
-      m.dataset.base ||
-      currentProduct.price
-    ) +
-    Number(
-      m.dataset.extra || 0
+  const modal =
+    document.querySelector(
+      "#productModal"
     );
 
-  const priceEl =
-    document.querySelector("#modalPrice");
+  if(
+    !modal ||
+    !currentProduct
+  ){
 
-  if(priceEl){
+    return;
 
-    priceEl.textContent =
+  }
+
+  const base =
+    safeNumber(
+      modal.dataset.base
+    );
+
+  const extra =
+    safeNumber(
+      modal.dataset.extra
+    );
+
+  const price =
+    roundMoney(
+      base + extra
+    );
+
+  const priceElement =
+    document.querySelector(
+      "#modalPrice"
+    );
+
+  if(priceElement){
+
+    priceElement.textContent =
       money(price);
 
   }
@@ -1247,48 +1597,90 @@ function updateModalPrice(){
 
 
 /* =========================================================
-   ADICIONAR À SACOLA
+   ADICIONAR PRODUTO
    ========================================================= */
 
 function addCurrent(){
 
-  if(!currentProduct) return;
+  if(!currentProduct){
 
-  const m =
-    document.querySelector("#productModal");
+    return;
+
+  }
+
+  const modal =
+    document.querySelector(
+      "#productModal"
+    );
+
+  if(!modal){
+
+    return;
+
+  }
+
+  const base =
+    safeNumber(
+      modal.dataset.base ||
+      currentProduct.price
+    );
+
+  const extra =
+    safeNumber(
+      modal.dataset.extra
+    );
 
   const price =
-    Number(
-      m.dataset.base ||
-      currentProduct.price
-    ) +
-    Number(
-      m.dataset.extra || 0
+    roundMoney(
+      base + extra
     );
+
 
   const selected =
     [
-      ...m.querySelectorAll(
+      ...modal.querySelectorAll(
         ".option-btn.active"
       )
     ]
       .map(
-        x => x.dataset.value
+        button =>
+          button.dataset.value
       )
       .filter(Boolean)
       .join(" • ");
 
+
+  /*
+   * Cada combinação de produto + variação
+   * possui uma chave própria.
+   */
+
   const key =
-    `${currentProduct.id}-${selected}`;
+    `${currentProduct.id}::${selected}`;
+
 
   const found =
     cart.find(
-      i => i.key === key
+      item =>
+        item.key === key
     );
+
 
   if(found){
 
-    found.qty++;
+    found.qty =
+      Math.max(
+        1,
+        Math.floor(
+          safeNumber(found.qty)
+        )
+      ) + 1;
+
+    /*
+     * Não alteramos o preço antigo de um item
+     * já existente. Isso evita que alterações
+     * posteriores do produto mudem o carrinho.
+     */
 
   }else{
 
@@ -1319,6 +1711,7 @@ function addCurrent(){
 
   }
 
+
   saveCart();
 
   closeModal();
@@ -1331,45 +1724,175 @@ function addCurrent(){
 
 
 /* =========================================================
-   CARRINHO
+   RENDERIZAR PREÇO DO ITEM
+   ========================================================= */
+
+function renderCartItemPrice(item){
+
+  const original =
+    roundMoney(
+      safeNumber(item.price) *
+      safeNumber(item.qty)
+    );
+
+  return `
+    <div class="cart-price-box">
+
+      <strong>
+        ${money(original)}
+      </strong>
+
+    </div>
+  `;
+
+}
+
+
+/* =========================================================
+   RENDERIZAR ITEM COM DESCONTO
+   ========================================================= */
+
+function renderDiscountedCartPrice(
+  item,
+  payment = ""
+){
+
+  const original =
+    roundMoney(
+      safeNumber(item.price) *
+      safeNumber(item.qty)
+    );
+
+  const discount =
+    getItemDiscount(
+      item,
+      payment
+    );
+
+  if(discount <= 0){
+
+    return `
+      <div class="cart-price-box">
+
+        <strong>
+          ${money(original)}
+        </strong>
+
+      </div>
+    `;
+
+  }
+
+  const final =
+    roundMoney(
+      original - discount
+    );
+
+  const percent =
+    getProductDiscountPercent(
+      item
+    );
+
+  return `
+
+    <div class="cart-price-box">
+
+      <div
+        style="
+          font-size:.68rem;
+          color:#999;
+          text-decoration:line-through;
+          margin-bottom:2px;
+        ">
+
+        ${money(original)}
+
+      </div>
+
+      <strong
+        style="color:#3c8a55">
+
+        ${money(final)}
+
+      </strong>
+
+      <div
+        style="
+          font-size:.62rem;
+          color:#3c8a55;
+          margin-top:2px;
+        ">
+
+        -${percent}%
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
+   ATUALIZAR CARRINHO
    ========================================================= */
 
 function updateCartUI(){
 
+  /*
+   * Quantidade total.
+   */
+
   const count =
     cart.reduce(
-      (s, i) => s + i.qty,
+      (total,item) =>
+        total +
+        Math.max(
+          0,
+          Math.floor(
+            safeNumber(item.qty)
+          )
+        ),
       0
     );
 
+
   document
-    .querySelectorAll(".cart-count")
+    .querySelectorAll(
+      ".cart-count"
+    )
     .forEach(
-      x => x.textContent = count
+      element =>
+        element.textContent =
+          count
     );
 
+
   const body =
-    document.querySelector("#cartBody");
+    document.querySelector(
+      "#cartBody"
+    );
+
 
   if(body){
 
     body.innerHTML =
-
       cart.length
 
         ? cart.map(
-            (i, idx) => `
+            (item,index) => `
 
               <div class="cart-item">
 
                 <div class="cart-thumb">
-                  ${i.art}
+                  ${item.art}
                 </div>
 
                 <div>
 
                   <b>
-                    ${i.name}
+                    ${item.name}
                   </b>
 
                   <div
@@ -1378,11 +1901,12 @@ function updateCartUI(){
                       color:#7b7168;
                     ">
 
-                    ${i.brand}
+                    ${item.brand}
 
                     ${
-                      i.variation
-                        ? " • " + i.variation
+                      item.variation
+                        ? " • " +
+                          item.variation
                         : ""
                     }
 
@@ -1391,21 +1915,27 @@ function updateCartUI(){
                   <div class="qty">
 
                     <button
+                      type="button"
                       onclick="
-                        changeQty(${idx},-1)
+                        changeQty(${index},-1)
                       ">
+
                       −
+
                     </button>
 
                     <span>
-                      ${i.qty}
+                      ${item.qty}
                     </span>
 
                     <button
+                      type="button"
                       onclick="
-                        changeQty(${idx},1)
+                        changeQty(${index},1)
                       ">
+
                       +
+
                     </button>
 
                   </div>
@@ -1413,9 +1943,12 @@ function updateCartUI(){
                 </div>
 
                 <strong>
+
                   ${money(
-                    i.price * i.qty
+                    safeNumber(item.price) *
+                    safeNumber(item.qty)
                   )}
+
                 </strong>
 
               </div>
@@ -1437,13 +1970,18 @@ function updateCartUI(){
 
   }
 
+
   const total =
-    document.querySelector("#cartTotal");
+    document.querySelector(
+      "#cartTotal"
+    );
 
   if(total){
 
     total.textContent =
-      money(totalCart());
+      money(
+        totalCart()
+      );
 
   }
 
@@ -1454,17 +1992,29 @@ function updateCartUI(){
    QUANTIDADE
    ========================================================= */
 
-function changeQty(i, d){
+function changeQty(index,direction){
 
-  if(!cart[i]) return;
+  const item =
+    cart[index];
 
-  cart[i].qty += d;
+  if(!item) return;
 
-  if(cart[i].qty <= 0){
 
-    cart.splice(i,1);
+  item.qty =
+    Math.floor(
+      safeNumber(item.qty)
+    ) + direction;
+
+
+  if(item.qty <= 0){
+
+    cart.splice(
+      index,
+      1
+    );
 
   }
+
 
   saveCart();
 
@@ -1478,11 +2028,15 @@ function changeQty(i, d){
 function openCart(){
 
   const drawer =
-    document.querySelector("#drawer");
+    document.querySelector(
+      "#drawer"
+    );
 
   if(!drawer) return;
 
-  drawer.classList.add("open");
+  drawer.classList.add(
+    "open"
+  );
 
   document.body.style.overflow =
     "hidden";
@@ -1499,11 +2053,15 @@ function openCart(){
 function closeCart(){
 
   const drawer =
-    document.querySelector("#drawer");
+    document.querySelector(
+      "#drawer"
+    );
 
   if(drawer){
 
-    drawer.classList.remove("open");
+    drawer.classList.remove(
+      "open"
+    );
 
   }
 
@@ -1520,13 +2078,20 @@ function closeCart(){
 function closeModal(){
 
   const modal =
-    document.querySelector("#productModal");
+    document.querySelector(
+      "#productModal"
+    );
 
   if(modal){
 
-    modal.classList.remove("open");
+    modal.classList.remove(
+      "open"
+    );
 
   }
+
+  currentProduct =
+    null;
 
   document.body.style.overflow =
     "";
@@ -1535,7 +2100,7 @@ function closeModal(){
 
 
 /* =========================================================
-   CHECKOUT
+   CRIAR CHECKOUT
    ========================================================= */
 
 function checkoutWhatsApp(){
@@ -1550,18 +2115,23 @@ function checkoutWhatsApp(){
 
   }
 
+
   let modal =
     document.querySelector(
       "#checkoutModal"
     );
 
+
   if(!modal){
 
     modal =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     modal.id =
       "checkoutModal";
+
 
     modal.innerHTML = `
 
@@ -1571,11 +2141,13 @@ function checkoutWhatsApp(){
 
           <button
             class="checkout-close"
+            type="button"
             onclick="closeCheckout()">
 
             ×
 
           </button>
+
 
           <div class="checkout-header">
 
@@ -1597,6 +2169,7 @@ function checkoutWhatsApp(){
 
           </div>
 
+
           <div class="checkout-fields">
 
             <label>
@@ -1611,6 +2184,7 @@ function checkoutWhatsApp(){
 
             </label>
 
+
             <label>
 
               CPF *
@@ -1622,6 +2196,7 @@ function checkoutWhatsApp(){
                 placeholder="000.000.000-00">
 
             </label>
+
 
             <label>
 
@@ -1636,13 +2211,10 @@ function checkoutWhatsApp(){
             </label>
 
 
-            <!-- =================================================
-                 FORMA DE RECEBIMENTO
-                 ================================================= -->
-
             <div class="checkout-section-title">
               Como deseja receber?
             </div>
+
 
             <div class="checkout-types">
 
@@ -1724,15 +2296,10 @@ function checkoutWhatsApp(){
             </div>
 
 
-            <!-- =================================================
-                 PAGAMENTO
-                 ================================================= -->
-
             <div class="checkout-section-title">
-
               Forma de pagamento
-
             </div>
+
 
             <div class="payment-options">
 
@@ -1809,16 +2376,12 @@ function checkoutWhatsApp(){
             </div>
 
 
-            <!-- =================================================
-                 AVISO DE DESCONTO
-                 ================================================= -->
-
             <div
               id="discountBanner"
               class="discount-banner">
 
               🎁 <strong>
-                Compras acima de R$ 100,00
+                Compras a partir de R$ 100,00
               </strong>
 
               <br>
@@ -1827,12 +2390,13 @@ function checkoutWhatsApp(){
               <strong>Pix</strong> ou
               <strong>dinheiro</strong>.
 
+              <br>
+
+              Produtos  : <strong>5%</strong> •
+              Colas: <strong>3%</strong>
+
             </div>
 
-
-            <!-- =================================================
-                 INFORMAÇÃO UBER
-                 ================================================= -->
 
             <div
               id="checkoutUberInfo"
@@ -1840,7 +2404,9 @@ function checkoutWhatsApp(){
 
               <div class="checkout-delivery-info">
 
-                🛵 <strong>Retirada via Uber</strong>
+                🛵 <strong>
+                  Retirada via Uber
+                </strong>
 
                 <br><br>
 
@@ -1854,6 +2420,7 @@ function checkoutWhatsApp(){
 
                 após enviar o pedido, aguarde a
                 <strong>confirmação da loja</strong>.
+
                 Somente depois da confirmação,
                 solicite o Uber para realizar a retirada.
 
@@ -1861,10 +2428,6 @@ function checkoutWhatsApp(){
 
             </div>
 
-
-            <!-- =================================================
-                 INFORMAÇÃO ENTREGA
-                 ================================================= -->
 
             <div
               id="checkoutDeliveryInfo"
@@ -1882,7 +2445,9 @@ function checkoutWhatsApp(){
                 <br><br>
 
                 A taxa de entrega será
-                <strong>combinada diretamente com a loja</strong>.
+                <strong>
+                  combinada diretamente com a loja
+                </strong>.
 
                 <br><br>
 
@@ -1893,10 +2458,6 @@ function checkoutWhatsApp(){
 
             </div>
 
-
-            <!-- =================================================
-                 ENDEREÇO
-                 ================================================= -->
 
             <div
               id="checkoutAddressFields"
@@ -1913,6 +2474,7 @@ function checkoutWhatsApp(){
                   placeholder="00000-000">
 
               </label>
+
 
               <label>
 
@@ -1941,10 +2503,6 @@ function checkoutWhatsApp(){
           </div>
 
 
-          <!-- =================================================
-               RESUMO
-               ================================================= -->
-
           <div class="checkout-resume">
 
             <div>
@@ -1967,7 +2525,8 @@ function checkoutWhatsApp(){
               id="checkoutDiscountRow"
               style="display:none">
 
-              <span style="color:#3c8a55">
+              <span
+                style="color:#3c8a55">
 
                 🎁 Desconto
 
@@ -2040,6 +2599,7 @@ function checkoutWhatsApp(){
 
 
           <button
+            type="button"
             class="btn btn-gold checkout-send"
             onclick="sendCheckoutWhatsApp()">
 
@@ -2053,7 +2613,10 @@ function checkoutWhatsApp(){
 
     `;
 
-    document.body.appendChild(modal);
+
+    document.body.appendChild(
+      modal
+    );
 
     addCheckoutModalStyles();
 
@@ -2061,10 +2624,21 @@ function checkoutWhatsApp(){
 
   }
 
-  modal.classList.add("open");
+
+  /*
+   * IMPORTANTE:
+   * Toda vez que o checkout abre, ele apenas
+   * recalcula os valores. Não modifica o carrinho.
+   */
+
+  modal.classList.add(
+    "open"
+  );
 
   document.body.style.overflow =
     "hidden";
+
+  updateCheckoutProducts();
 
   changeCheckoutType();
 
@@ -2074,7 +2648,30 @@ function checkoutWhatsApp(){
 
 
 /* =========================================================
-   ATUALIZAR FORMA DE PAGAMENTO
+   ATUALIZAR PRODUTOS NO CHECKOUT
+   ========================================================= */
+
+function updateCheckoutProducts(){
+
+  const element =
+    document.querySelector(
+      "#checkoutProducts"
+    );
+
+  if(element){
+
+    element.textContent =
+      money(
+        totalCart()
+      );
+
+  }
+
+}
+
+
+/* =========================================================
+   ATUALIZAR PAGAMENTO
    ========================================================= */
 
 function updatePaymentSelection(){
@@ -2084,38 +2681,17 @@ function updatePaymentSelection(){
       'input[name="paymentMethod"]:checked'
     )?.value || "";
 
+
   const type =
     document.querySelector(
       'input[name="checkoutType"]:checked'
-    )?.value || "retirada";
-
-  const discount =
-    paymentDiscount(payment);
-
-  const discountRow =
-    document.querySelector(
-      "#checkoutDiscountRow"
-    );
-
-  const discountEl =
-    document.querySelector(
-      "#checkoutDiscount"
-    );
-
-  const total =
-    document.querySelector(
-      "#checkoutTotal"
-    );
-
-  const banner =
-    document.querySelector(
-      "#discountBanner"
-    );
+    )?.value ||
+    "retirada";
 
 
-  /* =========================================================
-     ENTREGA SOMENTE PIX OU CARTÃO
-     ========================================================= */
+  /*
+   * Dinheiro não pode ser usado em entrega/Uber.
+   */
 
   const cashOption =
     document.querySelector(
@@ -2127,45 +2703,78 @@ function updatePaymentSelection(){
       '#cashPaymentOption input'
     );
 
+
   if(
     cashOption &&
     cashInput
   ){
 
-    if(
+    const disabled =
       type === "uber" ||
-      type === "entrega"
+      type === "entrega";
+
+
+    cashOption.style.opacity =
+      disabled
+        ? ".45"
+        : "1";
+
+
+    cashOption.style.pointerEvents =
+      disabled
+        ? "none"
+        : "auto";
+
+
+    if(
+      disabled &&
+      cashInput.checked
     ){
 
-      cashOption.style.opacity =
-        ".45";
-
-      cashOption.style.pointerEvents =
-        "none";
-
-      if(cashInput.checked){
-
-        cashInput.checked =
-          false;
-
-      }
-
-    }else{
-
-      cashOption.style.opacity =
-        "1";
-
-      cashOption.style.pointerEvents =
-        "auto";
+      cashInput.checked =
+        false;
 
     }
 
   }
 
 
-  /* =========================================================
-     DESCONTO
-     ========================================================= */
+  /*
+   * Recalcula sempre do zero.
+   */
+
+  const discount =
+    paymentDiscount(
+      payment
+    );
+
+
+  const total =
+    totalWithPayment(
+      payment
+    );
+
+
+  const discountRow =
+    document.querySelector(
+      "#checkoutDiscountRow"
+    );
+
+  const discountElement =
+    document.querySelector(
+      "#checkoutDiscount"
+    );
+
+  const totalElement =
+    document.querySelector(
+      "#checkoutTotal"
+    );
+
+  const banner =
+    document.querySelector(
+      "#discountBanner"
+    );
+
 
   if(discount > 0){
 
@@ -2176,12 +2785,15 @@ function updatePaymentSelection(){
 
     }
 
-    if(discountEl){
 
-      discountEl.textContent =
-        "-" + money(discount);
+    if(discountElement){
+
+      discountElement.textContent =
+        "-" +
+        money(discount);
 
     }
+
 
     if(banner){
 
@@ -2200,9 +2812,8 @@ function updatePaymentSelection(){
         }
 
         <strong>
-          acima de R$ 100,00
+          
         </strong>
-        recebe desconto.
 
       `;
 
@@ -2221,12 +2832,13 @@ function updatePaymentSelection(){
 
     }
 
+
     if(banner){
 
       banner.innerHTML = `
 
         🎁 <strong>
-          Compras acima de R$ 100,00
+          Compras a partir de R$ 100,00
         </strong>
 
         <br>
@@ -2234,6 +2846,9 @@ function updatePaymentSelection(){
         Ganhe desconto pagando no
         <strong>Pix</strong> ou
         <strong>dinheiro</strong>.
+
+        <br>
+
 
       `;
 
@@ -2246,20 +2861,21 @@ function updatePaymentSelection(){
   }
 
 
-  if(total){
+  if(totalElement){
 
-    total.textContent =
-      money(
-        totalWithPayment(payment)
-      );
+    totalElement.textContent =
+      money(total);
 
   }
+
+
+  updateCheckoutProducts();
 
 }
 
 
 /* =========================================================
-   CAMPOS DO CHECKOUT
+   CAMPOS
    ========================================================= */
 
 function setupCheckoutInputs(){
@@ -2284,6 +2900,7 @@ function setupCheckoutInputs(){
     );
 
   }
+
 
   const cep =
     document.querySelector(
@@ -2315,42 +2932,144 @@ function setupCheckoutInputs(){
 
 function formatCPF(value){
 
-  value =
-    value
+  let clean =
+    String(value || "")
       .replace(/\D/g,"")
       .slice(0,11);
 
-  if(value.length > 3){
 
-    value =
-      value.replace(
-        /(\d{3})(\d)/,
-        "$1.$2"
-      );
+  if(clean.length > 9){
 
-  }
-
-  if(value.length > 7){
-
-    value =
-      value.replace(
-        /(\d{3})(\d)/,
-        "$1.$2"
-      );
+    return clean.replace(
+      /(\d{3})(\d{3})(\d{3})(\d{1,2})/,
+      "$1.$2.$3-$4"
+    );
 
   }
 
-  if(value.length > 11){
 
-    value =
-      value.replace(
-        /(\d{3})(\d{1,2})$/,
-        "$1-$2"
-      );
+  if(clean.length > 6){
+
+    return clean.replace(
+      /(\d{3})(\d{3})(\d{1,3})/,
+      "$1.$2.$3"
+    );
 
   }
 
-  return value;
+
+  if(clean.length > 3){
+
+    return clean.replace(
+      /(\d{3})(\d{1,3})/,
+      "$1.$2"
+    );
+
+  }
+
+
+  return clean;
+
+}
+
+
+/* =========================================================
+   VALIDAR CPF
+   ========================================================= */
+
+function isValidCPF(value){
+
+  const cpf =
+    String(value || "")
+      .replace(/\D/g,"");
+
+
+  if(cpf.length !== 11){
+
+    return false;
+
+  }
+
+
+  if(
+    /^(\d)\1{10}$/.test(cpf)
+  ){
+
+    return false;
+
+  }
+
+
+  let sum = 0;
+
+
+  for(
+    let i = 0;
+    i < 9;
+    i++
+  ){
+
+    sum +=
+      Number(cpf[i]) *
+      (10 - i);
+
+  }
+
+
+  let digit =
+    11 -
+    (sum % 11);
+
+
+  if(digit >= 10){
+
+    digit = 0;
+
+  }
+
+
+  if(
+    digit !==
+    Number(cpf[9])
+  ){
+
+    return false;
+
+  }
+
+
+  sum = 0;
+
+
+  for(
+    let i = 0;
+    i < 10;
+    i++
+  ){
+
+    sum +=
+      Number(cpf[i]) *
+      (11 - i);
+
+  }
+
+
+  digit =
+    11 -
+    (sum % 11);
+
+
+  if(digit >= 10){
+
+    digit = 0;
+
+  }
+
+
+  return (
+    digit ===
+    Number(cpf[10])
+  );
 
 }
 
@@ -2361,22 +3080,23 @@ function formatCPF(value){
 
 function formatCEP(value){
 
-  value =
-    value
+  let clean =
+    String(value || "")
       .replace(/\D/g,"")
       .slice(0,8);
 
-  if(value.length > 5){
 
-    value =
-      value.replace(
-        /^(\d{5})(\d)/,
-        "$1-$2"
-      );
+  if(clean.length > 5){
+
+    return clean.replace(
+      /^(\d{5})(\d{1,3})$/,
+      "$1-$2"
+    );
 
   }
 
-  return value;
+
+  return clean;
 
 }
 
@@ -2391,6 +3111,7 @@ function changeCheckoutType(){
     document.querySelector(
       'input[name="checkoutType"]:checked'
     )?.value;
+
 
   const uberInfo =
     document.querySelector(
@@ -2422,143 +3143,74 @@ function changeCheckoutType(){
       "#checkoutError"
     );
 
+
   if(!type) return;
+
 
   if(error){
 
-    error.innerHTML = "";
+    error.textContent =
+      "";
 
   }
 
 
-  /* =========================================================
-     UBER
-     ========================================================= */
+  if(uberInfo)
+    uberInfo.style.display =
+      "none";
+
+  if(deliveryInfo)
+    deliveryInfo.style.display =
+      "none";
+
+  if(addressFields)
+    addressFields.style.display =
+      "none";
+
+  if(deliveryFeeRow)
+    deliveryFeeRow.style.display =
+      "none";
+
 
   if(type === "uber"){
 
-    if(uberInfo){
-
+    if(uberInfo)
       uberInfo.style.display =
         "block";
 
-    }
-
-    if(deliveryInfo){
-
-      deliveryInfo.style.display =
-        "none";
-
-    }
-
-    if(addressFields){
-
-      addressFields.style.display =
-        "none";
-
-    }
-
-    if(delivery){
-
+    if(delivery)
       delivery.textContent =
         "Uber — por conta do cliente";
 
-    }
-
-    if(deliveryFeeRow){
-
-      deliveryFeeRow.style.display =
-        "none";
-
-    }
-
   }
 
-
-  /* =========================================================
-     ENTREGA
-     ========================================================= */
 
   else if(type === "entrega"){
 
-    if(uberInfo){
-
-      uberInfo.style.display =
-        "none";
-
-    }
-
-    if(deliveryInfo){
-
+    if(deliveryInfo)
       deliveryInfo.style.display =
         "block";
 
-    }
-
-    if(addressFields){
-
+    if(addressFields)
       addressFields.style.display =
         "block";
 
-    }
-
-    if(delivery){
-
+    if(delivery)
       delivery.textContent =
         "Entrega — taxa a combinar";
 
-    }
-
-    if(deliveryFeeRow){
-
+    if(deliveryFeeRow)
       deliveryFeeRow.style.display =
         "flex";
-
-    }
 
   }
 
 
-  /* =========================================================
-     RETIRADA PRESENCIAL
-     ========================================================= */
-
   else{
 
-    if(uberInfo){
-
-      uberInfo.style.display =
-        "none";
-
-    }
-
-    if(deliveryInfo){
-
-      deliveryInfo.style.display =
-        "none";
-
-    }
-
-    if(addressFields){
-
-      addressFields.style.display =
-        "none";
-
-    }
-
-    if(delivery){
-
+    if(delivery)
       delivery.textContent =
         "Retirada presencial";
-
-    }
-
-    if(deliveryFeeRow){
-
-      deliveryFeeRow.style.display =
-        "none";
-
-    }
 
   }
 
@@ -2569,50 +3221,74 @@ function changeCheckoutType(){
 
 
 /* =========================================================
-   ENVIAR PEDIDO PELO WHATSAPP
+   ENVIAR WHATSAPP
    ========================================================= */
 
 function sendCheckoutWhatsApp(){
+
+  /*
+   * Fazemos uma cópia dos valores atuais.
+   * Nada do carrinho é alterado.
+   */
+
+  if(!cart.length){
+
+    toast(
+      "Sua sacola está vazia."
+    );
+
+    return;
+
+  }
+
 
   const name =
     document.querySelector(
       "#checkoutName"
     )?.value.trim() || "";
 
+
   const cpf =
     document.querySelector(
       "#checkoutCPF"
     )?.value.trim() || "";
+
 
   const email =
     document.querySelector(
       "#checkoutEmail"
     )?.value.trim() || "";
 
+
   const type =
     document.querySelector(
       'input[name="checkoutType"]:checked'
     )?.value || "";
+
 
   const payment =
     document.querySelector(
       'input[name="paymentMethod"]:checked'
     )?.value || "";
 
+
   const obs =
     document.querySelector(
       "#checkoutObs"
     )?.value.trim() || "";
+
 
   const cep =
     document.querySelector(
       "#checkoutCEP"
     )?.value.trim() || "";
 
+
   const address =
     document.querySelector(
       "#checkoutAddress"
     )?.value.trim() || "";
+
 
   const error =
     document.querySelector(
@@ -2620,18 +3296,32 @@ function sendCheckoutWhatsApp(){
     );
 
 
-  /* =======================================================
-     VALIDAÇÕES
-     ======================================================= */
+  function showError(message){
+
+    if(error){
+
+      error.textContent =
+        message;
+
+    }
+
+  }
+
+
+  /*
+   * Nome
+   */
 
   if(!name){
 
-    if(error)
-      error.innerHTML =
-        "⚠️ Informe seu nome completo.";
+    showError(
+      "⚠️ Informe seu nome completo."
+    );
 
     document
-      .querySelector("#checkoutName")
+      .querySelector(
+        "#checkoutName"
+      )
       ?.focus();
 
     return;
@@ -2639,96 +3329,124 @@ function sendCheckoutWhatsApp(){
   }
 
 
-  if(
-    cpf.replace(/\D/g,"").length !== 11
-  ){
+  /*
+   * CPF
+   */
 
-    if(error)
-      error.innerHTML =
-        "⚠️ Informe um CPF válido.";
+  if(!isValidCPF(cpf)){
+
+    showError(
+      "⚠️ Informe um CPF válido."
+    );
 
     document
-      .querySelector("#checkoutCPF")
+      .querySelector(
+        "#checkoutCPF"
+      )
       ?.focus();
 
     return;
 
   }
 
+
+  /*
+   * Recebimento
+   */
 
   if(!type){
 
-    if(error)
-      error.innerHTML =
-        "⚠️ Escolha como deseja receber o pedido.";
+    showError(
+      "⚠️ Escolha como deseja receber o pedido."
+    );
 
     return;
 
   }
 
+
+  /*
+   * Pagamento
+   */
 
   if(!payment){
 
-    if(error)
-      error.innerHTML =
-        "⚠️ Escolha uma forma de pagamento.";
+    showError(
+      "⚠️ Escolha uma forma de pagamento."
+    );
 
     return;
 
   }
 
 
-  /* =======================================================
-     ENTREGA A PARTIR DE R$ 50
-     ======================================================= */
+  /*
+   * Entrega
+   */
+
+  const subtotal =
+    totalCart();
+
 
   if(type === "entrega"){
 
-    if(totalCart() < DELIVERY.minimumOrder){
+    if(
+      subtotal <
+      DELIVERY.minimumOrder
+    ){
 
-      if(error)
-        error.innerHTML =
-          `⚠️ A entrega está disponível somente para pedidos a partir de ${money(DELIVERY.minimumOrder)}.`;
+      showError(
+        `⚠️ A entrega está disponível somente para pedidos a partir de ${money(DELIVERY.minimumOrder)}.`
+      );
 
       return;
 
     }
+
 
     if(
       payment !== "pix" &&
       payment !== "cartao"
     ){
 
-      if(error)
-        error.innerHTML =
-          "⚠️ Para entrega, o pagamento deve ser feito somente via Pix ou cartão.";
+      showError(
+        "⚠️ Para entrega, o pagamento deve ser feito somente via Pix ou cartão."
+      );
 
       return;
 
     }
 
-    if(!cep){
 
-      if(error)
-        error.innerHTML =
-          "⚠️ Informe o CEP para a entrega.";
+    if(
+      cep.replace(/\D/g,"").length !== 8
+    ){
+
+      showError(
+        "⚠️ Informe um CEP válido."
+      );
 
       document
-        .querySelector("#checkoutCEP")
+        .querySelector(
+          "#checkoutCEP"
+        )
         ?.focus();
 
       return;
 
     }
 
+
     if(!address){
 
-      if(error)
-        error.innerHTML =
-          "⚠️ Informe o endereço para a entrega.";
+      showError(
+        "⚠️ Informe o endereço para a entrega."
+      );
 
       document
-        .querySelector("#checkoutAddress")
+        .querySelector(
+          "#checkoutAddress"
+        )
         ?.focus();
 
       return;
@@ -2738,71 +3456,132 @@ function sendCheckoutWhatsApp(){
   }
 
 
-  /* =======================================================
-     DINHEIRO
-     ======================================================= */
+  /*
+   * Dinheiro somente retirada.
+   */
 
   if(
     payment === "dinheiro" &&
     type !== "retirada"
   ){
 
-    if(error)
-      error.innerHTML =
-        "⚠️ Pagamento em dinheiro disponível somente para retirada presencial.";
+    showError(
+      "⚠️ Pagamento em dinheiro disponível somente para retirada presencial."
+    );
 
     return;
 
   }
 
 
-  /* =======================================================
-     PRODUTOS
-     ======================================================= */
+  /*
+   * Desconto calculado UMA ÚNICA VEZ
+   * para este checkout.
+   */
+
+  const discount =
+    paymentDiscount(
+      payment
+    );
+
+
+  const finalTotal =
+    Math.max(
+      0,
+      roundMoney(
+        subtotal -
+        discount
+      )
+    );
+
+
+  /*
+   * Produtos.
+   *
+   * Mostra preço individual com desconto.
+   */
 
   const lines =
     cart
-      .map(
-        i =>
-          `• ${i.name}
-  Quantidade: ${i.qty}${
-            i.variation
-              ? `
-  Variação: ${i.variation}`
-              : ""
-          }
-  Valor: ${money(i.price * i.qty)}`
-      )
+      .map(item => {
+
+        const itemOriginal =
+          roundMoney(
+            safeNumber(item.price) *
+            safeNumber(item.qty)
+          );
+
+
+        const itemDiscount =
+          getItemDiscount(
+            item,
+            payment
+          );
+
+
+        const itemFinal =
+          roundMoney(
+            itemOriginal -
+            itemDiscount
+          );
+
+
+        const percent =
+          getProductDiscountPercent(
+            item
+          );
+
+
+        let priceText =
+          `Valor: ${money(itemOriginal)}`;
+
+
+        if(itemDiscount > 0){
+
+          priceText =
+            `Valor original: ${money(itemOriginal)}
+  Desconto: ${percent}%
+  Valor com desconto: ${money(itemFinal)}`;
+
+        }
+
+
+        return `• ${item.name}
+  Quantidade: ${item.qty}${
+    item.variation
+      ? `
+  Variação: ${item.variation}`
+      : ""
+  }
+  ${priceText}`;
+
+      })
       .join("\n\n");
 
 
-  const productsValue =
-    totalCart();
+  /*
+   * Forma de recebimento.
+   */
 
-  const discount =
-    paymentDiscount(payment);
+  let receive =
+    "";
 
-  const total =
-    totalWithPayment(payment);
-
-
-  /* =======================================================
-     FORMA DE RECEBIMENTO
-     ======================================================= */
-
-  let receive = "";
 
   if(type === "uber"){
 
     receive =
       "🛵 Retirada via Uber — por conta do cliente";
 
-  }else if(type === "entrega"){
+  }
+
+  else if(type === "entrega"){
 
     receive =
-      "🚚 Entrega — disponível a partir de R$ 50,00";
+      "🚚 Entrega — taxa a combinar";
 
-  }else{
+  }
+
+  else{
 
     receive =
       "🛍️ Retirada presencial";
@@ -2810,23 +3589,29 @@ function sendCheckoutWhatsApp(){
   }
 
 
-  /* =======================================================
-     FORMA DE PAGAMENTO
-     ======================================================= */
+  /*
+   * Pagamento.
+   */
 
-  let paymentText = "";
+  let paymentText =
+    "";
+
 
   if(payment === "pix"){
 
     paymentText =
       "💚 Pix";
 
-  }else if(payment === "cartao"){
+  }
+
+  else if(payment === "cartao"){
 
     paymentText =
       "💳 Cartão";
 
-  }else if(payment === "dinheiro"){
+  }
+
+  else if(payment === "dinheiro"){
 
     paymentText =
       "💵 Dinheiro";
@@ -2834,11 +3619,12 @@ function sendCheckoutWhatsApp(){
   }
 
 
-  /* =======================================================
-     INFORMAÇÕES EXTRAS
-     ======================================================= */
+  /*
+   * Informações extras.
+   */
 
-  let receiveInfo = "";
+  let receiveInfo =
+    "";
 
 
   if(type === "uber"){
@@ -2883,26 +3669,26 @@ Presencial na loja.`;
   }
 
 
-  /* =======================================================
-     MENSAGEM WHATSAPP
-     ======================================================= */
+  /*
+   * Mensagem final.
+   */
 
   const message =
 
 `Olá! Quero fazer um pedido na ${STORE.name} 💛
 
-🛍️ Produtos
+🛍️ PRODUTOS
 
 ${lines}
 
 ━━━━━━━━━━━━━━━━━━
 
 💰 Valor dos produtos:
-${money(productsValue)}
+${money(subtotal)}
 
 ${
   discount > 0
-    ? `🎁 Desconto:
+    ? `🎁 Desconto total:
 -${money(discount)}
 
 `
@@ -2913,12 +3699,12 @@ ${receive}
 💳 Forma de pagamento:
 ${paymentText}
 
-💰 Total:
-${money(total)}
+💰 TOTAL:
+${money(finalTotal)}
 
 ━━━━━━━━━━━━━━━━━━
 
-👤 Dados do cliente
+👤 DADOS DO CLIENTE
 
 Nome:
 ${name}
@@ -2934,7 +3720,7 @@ ${
   obs
     ? `
 
-📝 Observações
+📝 OBSERVAÇÕES
 
 ${obs}`
     : ""
@@ -2945,29 +3731,27 @@ ${obs}`
 Gostaria de confirmar meu pedido e receber as orientações para pagamento. 💕`;
 
 
-  /* =======================================================
-     WHATSAPP
-     ======================================================= */
+  /*
+   * WhatsApp.
+   */
 
   const phone =
-    STORE.whatsapp.replace(
+    String(
+      STORE.whatsapp
+    ).replace(
       /\D/g,
       ""
     );
 
+
   if(
     !phone ||
-    phone === "5500000000000"
+    phone.length < 10
   ){
 
-    if(error){
-
-      error.innerHTML = `
-        ⚠️ Configure o número do WhatsApp
-        no início do app.js.
-      `;
-
-    }
+    showError(
+      "⚠️ Configure corretamente o número do WhatsApp no início do app.js."
+    );
 
     return;
 
@@ -2977,6 +3761,12 @@ Gostaria de confirmar meu pedido e receber as orientações para pagamento. 💕
   const url =
     `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
+
+  /*
+   * IMPORTANTE:
+   * Não limpamos o carrinho automaticamente.
+   * Assim o usuário pode voltar sem perder o pedido.
+   */
 
   window.open(
     url,
@@ -3018,26 +3808,27 @@ function closeCheckout(){
    TOAST
    ========================================================= */
 
-function toast(t){
+function toast(text){
 
-  const el =
+  const element =
     document.querySelector(
       "#toast"
     );
 
-  if(!el) return;
+  if(!element) return;
 
-  el.textContent =
-    t;
+  element.textContent =
+    text;
 
-  el.classList.add(
+  element.classList.add(
     "show"
   );
+
 
   setTimeout(
     () => {
 
-      el.classList.remove(
+      element.classList.remove(
         "show"
       );
 
@@ -3049,7 +3840,7 @@ function toast(t){
 
 
 /* =========================================================
-   ESTILO DO CHECKOUT
+   ESTILO CHECKOUT
    ========================================================= */
 
 function addCheckoutModalStyles(){
@@ -3296,10 +4087,6 @@ function addCheckoutModalStyles(){
     }
 
 
-    /* =====================================================
-       RECEBIMENTO
-       ===================================================== */
-
     .checkout-types{
 
       display:grid;
@@ -3383,10 +4170,6 @@ function addCheckoutModalStyles(){
 
     }
 
-
-    /* =====================================================
-       PAGAMENTO
-       ===================================================== */
 
     .payment-options{
 
@@ -3472,10 +4255,6 @@ function addCheckoutModalStyles(){
     }
 
 
-    /* =====================================================
-       AVISO DE DESCONTO
-       ===================================================== */
-
     .discount-banner{
 
       margin-top:4px;
@@ -3510,10 +4289,6 @@ function addCheckoutModalStyles(){
     }
 
 
-    /* =====================================================
-       INFORMAÇÕES DE ENTREGA
-       ===================================================== */
-
     .checkout-delivery-info{
 
       padding:11px 12px;
@@ -3532,10 +4307,6 @@ function addCheckoutModalStyles(){
 
     }
 
-
-    /* =====================================================
-       RESUMO
-       ===================================================== */
 
     .checkout-resume{
 
@@ -3624,10 +4395,6 @@ function addCheckoutModalStyles(){
     }
 
 
-    /* =====================================================
-       CELULAR
-       ===================================================== */
-
     @media(max-width:600px){
 
       .checkout-overlay{
@@ -3672,12 +4439,150 @@ function addCheckoutModalStyles(){
 
 
 /* =========================================================
+   SLIDER HERO
+   ========================================================= */
+
+let heroSlideIndex = 0;
+let heroSlideTimer;
+
+
+function showHeroSlide(index){
+
+  const slides =
+    document.querySelectorAll(
+      ".hero-slide"
+    );
+
+  const dots =
+    document.querySelectorAll(
+      ".slider-dot"
+    );
+
+
+  if(!slides.length) return;
+
+
+  if(
+    index >= slides.length
+  ){
+
+    heroSlideIndex =
+      0;
+
+  }
+
+
+  if(index < 0){
+
+    heroSlideIndex =
+      slides.length - 1;
+
+  }
+
+
+  slides.forEach(
+    (slide,i) => {
+
+      slide.classList.toggle(
+        "active",
+        i === heroSlideIndex
+      );
+
+    }
+  );
+
+
+  dots.forEach(
+    (dot,i) => {
+
+      dot.classList.toggle(
+        "active",
+        i === heroSlideIndex
+      );
+
+    }
+  );
+
+}
+
+
+function changeHeroSlide(direction){
+
+  heroSlideIndex +=
+    direction;
+
+  showHeroSlide(
+    heroSlideIndex
+  );
+
+  restartHeroSlider();
+
+}
+
+
+function goHeroSlide(index){
+
+  heroSlideIndex =
+    index;
+
+  showHeroSlide(
+    heroSlideIndex
+  );
+
+  restartHeroSlider();
+
+}
+
+
+function startHeroSlider(){
+
+  clearInterval(
+    heroSlideTimer
+  );
+
+
+  heroSlideTimer =
+    setInterval(
+      () => {
+
+        heroSlideIndex++;
+
+        showHeroSlide(
+          heroSlideIndex
+        );
+
+      },
+      4000
+    );
+
+}
+
+
+function restartHeroSlider(){
+
+  startHeroSlider();
+
+}
+
+
+/* =========================================================
    INICIALIZAÇÃO
    ========================================================= */
 
 document.addEventListener(
   "DOMContentLoaded",
   () => {
+
+    /*
+     * Primeiro carregamos o carrinho.
+     */
+
+    loadCart();
+
+
+    /*
+     * Depois configuramos a página.
+     */
 
     setupFilters();
 
@@ -3687,10 +4592,12 @@ document.addEventListener(
 
 
     document
-      .querySelectorAll(".open-cart")
+      .querySelectorAll(
+        ".open-cart"
+      )
       .forEach(
-        x =>
-          x.addEventListener(
+        element =>
+          element.addEventListener(
             "click",
             openCart
           )
@@ -3698,10 +4605,12 @@ document.addEventListener(
 
 
     document
-      .querySelectorAll(".close-cart")
+      .querySelectorAll(
+        ".close-cart"
+      )
       .forEach(
-        x =>
-          x.addEventListener(
+        element =>
+          element.addEventListener(
             "click",
             closeCart
           )
@@ -3709,7 +4618,9 @@ document.addEventListener(
 
 
     document
-      .querySelector("#closeModal")
+      .querySelector(
+        "#closeModal"
+      )
       ?.addEventListener(
         "click",
         closeModal
@@ -3717,7 +4628,9 @@ document.addEventListener(
 
 
     document
-      .querySelector("#addCurrent")
+      .querySelector(
+        "#addCurrent"
+      )
       ?.addEventListener(
         "click",
         addCurrent
@@ -3725,7 +4638,9 @@ document.addEventListener(
 
 
     document
-      .querySelector("#checkout")
+      .querySelector(
+        "#checkout"
+      )
       ?.addEventListener(
         "click",
         checkoutWhatsApp
@@ -3733,13 +4648,17 @@ document.addEventListener(
 
 
     document
-      .querySelector("#menuBtn")
+      .querySelector(
+        "#menuBtn"
+      )
       ?.addEventListener(
         "click",
         () => {
 
           document
-            .querySelector("#navlinks")
+            .querySelector(
+              "#navlinks"
+            )
             ?.classList
             .toggle(
               "mobile-open"
@@ -3748,132 +4667,10 @@ document.addEventListener(
         }
       );
 
-  }
-);
 
-/* =========================================================
-   SLIDER DO HERO
-========================================================= */
-
-let heroSlideIndex = 0;
-let heroSlideTimer;
-
-
-/* =========================================================
-   MOSTRAR SLIDE
-========================================================= */
-
-function showHeroSlide(index) {
-
-  const slides =
-    document.querySelectorAll(".hero-slide");
-
-  const dots =
-    document.querySelectorAll(".slider-dot");
-
-  if (!slides.length) return;
-
-
-  if (index >= slides.length) {
-    heroSlideIndex = 0;
-  }
-
-  if (index < 0) {
-    heroSlideIndex =
-      slides.length - 1;
-  }
-
-
-  slides.forEach((slide, i) => {
-
-    slide.classList.toggle(
-      "active",
-      i === heroSlideIndex
-    );
-
-  });
-
-
-  dots.forEach((dot, i) => {
-
-    dot.classList.toggle(
-      "active",
-      i === heroSlideIndex
-    );
-
-  });
-
-}
-
-
-/* =========================================================
-   PRÓXIMO / ANTERIOR
-========================================================= */
-
-function changeHeroSlide(direction) {
-
-  heroSlideIndex += direction;
-
-  showHeroSlide(heroSlideIndex);
-
-  restartHeroSlider();
-
-}
-
-
-/* =========================================================
-   ESCOLHER SLIDE
-========================================================= */
-
-function goHeroSlide(index) {
-
-  heroSlideIndex = index;
-
-  showHeroSlide(heroSlideIndex);
-
-  restartHeroSlider();
-
-}
-
-
-/* =========================================================
-   SLIDE AUTOMÁTICO
-========================================================= */
-
-function startHeroSlider() {
-
-  clearInterval(heroSlideTimer);
-
-  heroSlideTimer =
-    setInterval(() => {
-
-      heroSlideIndex++;
-
-      showHeroSlide(heroSlideIndex);
-
-    }, 4000);
-
-}
-
-
-/* =========================================================
-   REINICIAR SLIDER
-========================================================= */
-
-function restartHeroSlider() {
-
-  startHeroSlider();
-
-}
-
-
-/* =========================================================
-   INICIAR
-========================================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
+    /*
+     * Hero
+     */
 
     showHeroSlide(0);
 
@@ -3881,4 +4678,3 @@ document.addEventListener(
 
   }
 );
-
